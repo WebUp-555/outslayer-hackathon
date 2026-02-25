@@ -91,10 +91,19 @@ export default function Quiz() {
         questions: payloadQuestions,
       });
 
+      const questionReview = generatedQuestions.map((question, index) => ({
+        question: question.question,
+        options: question.options,
+        selected: selectedAnswers[index],
+        correct: question.correctAnswer,
+        concept: question.concept,
+      }));
+
       const resultData = {
         score: res?.data?.score ?? res?.data?.data?.score ?? 0,
         weakAreas: res?.data?.weakAreas ?? res?.data?.data?.weakAreas ?? [],
         explanation: res?.data?.explanation ?? res?.data?.data?.explanation ?? "No explanation available.",
+        questionReview,
       };
 
       navigate("/result", { state: resultData });

@@ -1,28 +1,80 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 export const useVoiceOutput = () => {
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const [error, setError] = useState("");
-	const [isSupported, setIsSupported] = useState(
-		typeof window !== "undefined" && window.speechSynthesis
+	const synthRef = useRef(typeof window !== "undefined" ? window.speechSynthesis : null);
+	const utteranceRef = useRef(null);
+	const [isSupported] = useState(
+		typeof window !== "undefined" &&
+			"speechSynthesis" in window &&
+			typeof window.SpeechSynthesisUtterance !== "undefined"
 	);
 
-	const speak = useCallback((text, options = {}) => {
+	useEffect(() => {
+		return () => {
+			if (synthRef.current) {
+				synthRef.current.cancel();
+			}
+		};
+	}, []);
+
+	const getVoices = useCallback(() => {
+		const synth = synthRef.current;
+		if (!synth) return Promise.resolve([]);
+
+		const existing = synth.getVoices();
+		if (existing.length) return Promise.resolve(existing);
+
+		return new Promise((resolve) => {
+			const timeoutId = setTimeout(() => {
+				resolve(synth.getVoices());
+			}, 400);
+
+			synth.onvoiceschanged = () => {
+				clearTimeout(timeoutId);
+				resolve(synth.getVoices());
+			};
+		});
+	}, []);
+
+	const speak = useCallback(async (text, options = {}) => {
 		if (!isSupported) {
 			setError("Text-to-Speech is not supported in your browser");
 			return;
 		}
 
-		try {
-			// Cancel any ongoing speech
-			window.speechSynthesis.cancel();
+		if (!text || !String(text).trim()) {
+			setError("No text available to read aloud");
+			return;
+		}
 
-			const utterance = new SpeechSynthesisUtterance(text);
+		try {
+			const synth = synthRef.current;
+			if (!synth) {
+				setError("Speech engine is not available");
+				return;
+			}
+
+			// Cancel any ongoing speech
+			synth.cancel();
+
+			const utterance = new SpeechSynthesisUtterance(String(text).trim());
 			utterance.rate = options.rate || 1;
 			utterance.pitch = options.pitch || 1;
 			utterance.volume = options.volume || 1;
 
 			if (options.lang) utterance.lang = options.lang;
+
+			const voices = await getVoices();
+			if (voices.length && options.lang) {
+				const exactVoice = voices.find((voice) => voice.lang === options.lang);
+				const languageOnly = options.lang.split("-")[0];
+				const fallbackVoice = voices.find((voice) => voice.lang?.startsWith(languageOnly));
+				utterance.voice = exactVoice || fallbackVoice || voices[0];
+			}
+
+			utteranceRef.current = utterance;
 
 			utterance.onstart = () => {
 				setIsSpeaking(true);
@@ -38,15 +90,19 @@ export const useVoiceOutput = () => {
 				setIsSpeaking(false);
 			};
 
-			window.speechSynthesis.speak(utterance);
+			synth.resume();
+			synth.speak(utterance);
 		} catch (err) {
 			setError(err.message);
+			setIsSpeaking(false);
 		}
-	}, [isSupported]);
+	}, [getVoices, isSupported]);
 
 	const stop = useCallback(() => {
-		if (typeof window !== "undefined" && window.speechSynthesis) {
-			window.speechSynthesis.cancel();
+		const synth = synthRef.current;
+		if (synth) {
+			synth.cancel();
+			utteranceRef.current = null;
 			setIsSpeaking(false);
 		}
 	}, []);

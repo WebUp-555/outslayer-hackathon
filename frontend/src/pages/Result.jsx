@@ -10,6 +10,7 @@ export default function Result() {
   const score = state?.score ?? 0;
   const weakAreas = Array.isArray(state?.weakAreas) ? state.weakAreas : [];
   const explanation = state?.explanation || "No explanation available.";
+  const questionReview = Array.isArray(state?.questionReview) ? state.questionReview : [];
   const [selectedLanguage, setSelectedLanguage] = useState("en");
 
   const explanationPoints = useMemo(() => {
@@ -72,6 +73,34 @@ export default function Result() {
         {weakAreas.length === 0 && (
           <div className={`glow-card mt-6 rounded-xl border p-6 backdrop-blur-sm text-center ${isDark ? "border-green-600/30 bg-green-900/20" : "border-green-300/50 bg-green-50/30"}`}>
             <p className={`text-lg font-semibold ${isDark ? "text-green-400" : "text-green-700"}`}>✅ Perfect! No weak areas detected.</p>
+          </div>
+        )}
+
+        {questionReview.length > 0 && (
+          <div className={`glow-card mt-6 rounded-xl border p-6 backdrop-blur-sm ${isDark ? "border-blue-700/40 bg-gray-800/30" : "border-blue-200/60 bg-white/40"}`}>
+            <h2 className="text-lg font-semibold gradient-text">✅ Correct Answers Review</h2>
+            <div className="mt-4 space-y-4">
+              {questionReview.map((item, index) => {
+                const isCorrect = item.selected === item.correct;
+
+                return (
+                  <div
+                    key={`${item.question}-${index}`}
+                    className={`rounded-xl border p-4 ${isDark ? "border-gray-700 bg-gray-900/40" : "border-blue-100 bg-blue-50/50"}`}
+                  >
+                    <p className={`text-sm font-semibold ${isDark ? "text-gray-100" : "text-gray-900"}`}>
+                      Q{index + 1}. {item.question}
+                    </p>
+                    <p className={`mt-2 text-sm ${isCorrect ? (isDark ? "text-green-400" : "text-green-700") : (isDark ? "text-red-400" : "text-red-700")}`}>
+                      Your answer: {item.selected || "Not answered"}
+                    </p>
+                    <p className={`mt-1 text-sm font-semibold ${isDark ? "text-green-400" : "text-green-700"}`}>
+                      Correct answer: {item.correct}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
