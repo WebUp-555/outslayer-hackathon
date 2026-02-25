@@ -39,19 +39,8 @@ export default function Login() {
             <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">Learn smarter with AI-powered insights</h1>
             <p className="mt-3 text-sm text-blue-100 sm:text-base">Personalized learning paths, instant feedback, and confidence tracking in one premium experience.</p>
           </div>
-          <div className="mt-6 grid grid-cols-3 gap-2 text-center sm:gap-3">
-            <div className="glow-badge rounded-xl bg-white/10 p-3 backdrop-blur-sm">
-              <p className="text-lg font-bold">98%</p>
-              <p className="text-[11px] text-blue-100">Accuracy</p>
-            </div>
-            <div className="glow-badge rounded-xl bg-white/10 p-3 backdrop-blur-sm">
-              <p className="text-lg font-bold">24/7</p>
-              <p className="text-[11px] text-blue-100">Tutor</p>
-            </div>
-            <div className="glow-badge rounded-xl bg-white/10 p-3 backdrop-blur-sm">
-              <p className="text-lg font-bold">50k+</p>
-              <p className="text-[11px] text-blue-100">Learners</p>
-            </div>
+          <div className="mt-6 rounded-xl bg-white/10 p-3 text-center text-sm font-semibold text-blue-100 backdrop-blur-sm">
+            No analytics
           </div>
         </div>
 

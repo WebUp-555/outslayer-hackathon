@@ -1,5 +1,21 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 
+const sanitizeForSpeech = (input) => {
+	if (!input) return "";
+
+	return String(input)
+		.replace(/```[\s\S]*?```/g, " ")
+		.replace(/`([^`]+)`/g, "$1")
+		.replace(/^\s*[*•#>-]+\s*/gm, "")
+		.replace(/\*\*/g, "")
+		.replace(/[_~]/g, "")
+		.replace(/[|/\\]+/g, " ")
+		.replace(/[{}\[\]()]/g, " ")
+		.replace(/\s*[,;:]+\s*/g, ". ")
+		.replace(/\s+/g, " ")
+		.trim();
+};
+
 export const useVoiceOutput = () => {
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const [error, setError] = useState("");
@@ -59,7 +75,14 @@ export const useVoiceOutput = () => {
 			// Cancel any ongoing speech
 			synth.cancel();
 
-			const utterance = new SpeechSynthesisUtterance(String(text).trim());
+			const cleanText = sanitizeForSpeech(text);
+			if (!cleanText) {
+				setError("No readable text available");
+				setIsSpeaking(false);
+				return;
+			}
+
+			const utterance = new SpeechSynthesisUtterance(cleanText);
 			utterance.rate = options.rate || 1;
 			utterance.pitch = options.pitch || 1;
 			utterance.volume = options.volume || 1;

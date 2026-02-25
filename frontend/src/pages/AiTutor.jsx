@@ -12,6 +12,7 @@ export default function AiTutor() {
 	const [explanation, setExplanation] = useState("");
 	const [error, setError] = useState("");
 	const [selectedLanguage, setSelectedLanguage] = useState("en");
+	const [explanationStyle, setExplanationStyle] = useState("clear-points");
 
 	const explanationPoints = useMemo(() => {
 		if (!explanation) return [];
@@ -48,7 +49,7 @@ export default function AiTutor() {
 				return;
 			}
 
-			const res = await aiApi.explain({ topics });
+			const res = await aiApi.explain({ topics, style: explanationStyle });
 			setExplanation(res?.data?.data?.explanation || "No explanation returned.");
 		} catch (err) {
 			setError(err?.response?.data?.message || "Failed to generate AI explanation.");
@@ -99,6 +100,18 @@ export default function AiTutor() {
 								value={topicsInput}
 								onChange={e => setTopicsInput(e.target.value)}
 							/>
+						</div>
+						<div>
+							<label className={`mb-2 block text-xs font-semibold uppercase tracking-wide ${isDark ? "text-gray-400" : "text-gray-600"}`}>🧠 Explanation Style</label>
+							<select
+								value={explanationStyle}
+								onChange={e => setExplanationStyle(e.target.value)}
+								className={`w-full rounded-xl border px-4 py-3 text-sm outline-none backdrop-blur-sm ${isDark ? "border-gray-600 bg-gray-800 text-gray-100" : "border-blue-300 bg-white/80 text-gray-900"}`}
+							>
+								<option value="elaborate">Elaborate</option>
+								<option value="simple">Simple</option>
+								<option value="clear-points">Clear Points</option>
+							</select>
 						</div>
 						<button
 							type="button"
