@@ -1,7 +1,13 @@
 import Groq from "groq-sdk";
 import { ApiError } from "../utils/ApiError.js";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+export const getGroqClient = () => {
+  if (!process.env.GROQ_API_KEY) {
+    throw new ApiError(500, "GROQ_API_KEY is not configured");
+  }
+
+  return new Groq({ apiKey: process.env.GROQ_API_KEY });
+};
 
 export const explainWeakTopics = async (topics = []) => {
   if (!Array.isArray(topics)) {
@@ -12,18 +18,18 @@ export const explainWeakTopics = async (topics = []) => {
     return "Great job! No weak areas detected.";
   }
 
-  if (!process.env.GROQ_API_KEY) {
-    throw new ApiError(500, "GROQ_API_KEY is not configured");
-  }
-
   const prompt = `
 Explain these weak topics in simple student-friendly language:
 ${topics.join(", ")}
 
-Give short explanations + 1 example each.
+Return 3-6 concise bullet points only.
+Each bullet should be short, clear, and practical.
+Include one quick example where helpful.
 `;
 
   try {
+    const groq = getGroqClient();
+
     const chat = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],

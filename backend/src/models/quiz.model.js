@@ -1,31 +1,44 @@
-import Quiz from "../models/quiz.model.js";
-import { explainWeakTopics } from "../services/llm.service.js";
+import mongoose from "mongoose";
 
-export const submitQuiz = async (req, res) => {
-  const { topic, questions } = req.body;
+const questionSchema = new mongoose.Schema(
+  {
+    question: { type: String, trim: true },
+    userAnswer: { type: String, default: "" },
+    correctAnswer: { type: String, default: "" },
+    isCorrect: { type: Boolean, default: false },
+    concept: { type: String, trim: true },
+    selected: { type: String, default: "" },
+    correct: { type: String, default: "" },
+  },
+  { _id: false }
+);
 
-  // Detect weak concepts
-  const weakAreas = questions
-    .filter(q => q.selected !== q.correct)
-    .map(q => q.concept);
+const quizSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    topic: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    questions: {
+      type: [questionSchema],
+      default: [],
+    },
+    score: {
+      type: Number,
+      default: 0,
+    },
+    weakAreas: {
+      type: [String],
+      default: [],
+    },
+  },
+  { timestamps: true }
+);
 
-  const score =
-    ((questions.length - weakAreas.length) / questions.length) * 100;
-
-  // AI Explanation
-  const explanation = await explainWeakTopics(weakAreas);
-
-  const quiz = await Quiz.create({
-    userId: req.user.id,
-    topic,
-    questions,
-    score,
-    weakAreas
-  });
-
-  res.json({
-    score,
-    weakAreas,
-    explanation
-  });
-};
+export default mongoose.model("Quiz", quizSchema);
